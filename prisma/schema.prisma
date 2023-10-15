@@ -9,3 +9,38 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id       Int      @id @default(autoincrement())
+  username String
+  password String
+  urls     Url[]
+  role     UserRole @default(USER)
+}
+
+model Url {
+  id                    Int       @id @default(autoincrement())
+  originalUrl           String
+  short_url             String    @unique
+  number_of_clicks      Int
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+  expires_at            DateTime?
+  is_password_protected Boolean   @default(false)
+  password              String?
+  userId                Int
+  user                  User      @relation(fields: [userId], references: [id])
+  clicks                Click[]
+}
+
+model Click {
+  id         Int      @id @default(autoincrement())
+  clicked_at DateTime @default(now())
+  url_id     Int
+  url        Url      @relation(fields: [url_id], references: [id])
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
