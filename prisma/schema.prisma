@@ -20,16 +20,16 @@ model User {
 
 model Url {
   id                    Int       @id @default(autoincrement())
-  originalUrl           String
+  original_url          String
   short_url             String    @unique
-  number_of_clicks      Int
+  number_of_clicks      Int       @default(0)
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt
   expires_at            DateTime?
   is_password_protected Boolean   @default(false)
   password              String?
-  userId                Int
-  user                  User      @relation(fields: [userId], references: [id])
+  user_id               Int
+  user                  User      @relation(fields: [user_id], references: [id])
   clicks                Click[]
 }
 

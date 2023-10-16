@@ -6,9 +6,10 @@ import { PrismaService } from 'prisma/prisma.service';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { UserInterceptor } from './user/interceptos/user.interceptor';
 import { AuthGuard } from './user/guards/user.guard';
+import { UrlModule } from './url/url.module';
 
 @Module({
-  imports: [UserModule],
+  imports: [UserModule, UrlModule],
   controllers: [AppController],
   providers: [
     AppService,
