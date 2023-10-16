@@ -1,8 +1,54 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  NotImplementedException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
+import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async goToOriginalUrl(shorlUrl: string, password?: string) {
+    const hostname = process.env.HOSTNAME;
+    let now = new Date();
+
+    if (!hostname) {
+      throw new NotImplementedException('INVALID HOSTNAME');
+    }
+
+    const urlToNavigate = await this.prismaService.url.findUnique({
+      where: {
+        short_url: shorlUrl,
+      },
+    });
+
+    if (!urlToNavigate) {
+      throw new NotFoundException();
+    }
+
+    if (urlToNavigate.expires_at < now) {
+      throw new ForbiddenException('The url is expired');
+    }
+
+    if (urlToNavigate.is_password_protected) {
+      if (!password) {
+        throw new UnauthorizedException();
+      }
+
+      const isValidUrlPassword = await bcrypt.compare(
+        password,
+        urlToNavigate.password,
+      );
+
+      if (!isValidUrlPassword) {
+        throw new UnauthorizedException();
+      }
+    }
+
+    return { url: urlToNavigate.original_url };
   }
 }

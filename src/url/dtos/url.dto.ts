@@ -34,7 +34,9 @@ export class UrlResponseDto {
 
   @Expose({ name: 'shortUrl' })
   shortUrl() {
-    return this.short_url;
+    const hostname = process.env.HOSTNAME;
+
+    return `${hostname}/${this.short_url}`;
   }
 
   @Exclude()

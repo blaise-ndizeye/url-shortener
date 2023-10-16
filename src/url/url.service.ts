@@ -16,13 +16,7 @@ export class UrlService {
   private generateShortenedUrl(): string {
     const randomString = crypto.randomBytes(5).toString('hex');
 
-    const hostname = process.env?.HOSTNAME;
-
-    if (!hostname) {
-      throw new NotImplementedException('No hostname set');
-    }
-
-    return `${hostname}/${randomString}`;
+    return randomString;
   }
 
   async createShortenedUrl(
