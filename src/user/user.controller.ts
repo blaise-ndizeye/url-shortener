@@ -1,6 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { SignInDto, SignUpDto } from './dtos/user.dto';
 import { UserService } from './user.service';
+import { Roles } from './decorators/role.decorator';
+import { UserRole } from '@prisma/client';
 
 @Controller('user')
 export class UserController {

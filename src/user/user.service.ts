@@ -7,7 +7,7 @@ import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { User } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
-import { SignInDto, SignUpDto } from './dtos/user.dto';
+import { SignInDto, SignUpDto, TokenPayload } from './dtos/user.dto';
 
 @Injectable()
 export class UserService {
@@ -23,8 +23,10 @@ export class UserService {
     return user;
   }
 
-  generateJWT(payload: { id: number }): string {
-    return jwt.sign(payload, process.env.JWT_SECRET);
+  generateJWT(payload: TokenPayload): string {
+    return jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+    });
   }
 
   async signUp(body: SignUpDto): Promise<string> {

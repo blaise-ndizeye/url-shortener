@@ -21,3 +21,7 @@ export class SignInDto {
   @IsNotEmpty()
   password: string;
 }
+
+export interface TokenPayload {
+  id: number;
+}
