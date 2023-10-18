@@ -1,5 +1,6 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsDate,
   IsNotEmpty,
   IsOptional,
@@ -20,6 +21,16 @@ export class CreateShortenedUrlDto {
   @IsOptional()
   @IsString()
   password: string;
+}
+
+export class UrlFiltersDto {
+  @IsOptional()
+  @IsString()
+  search: string;
+
+  @IsOptional()
+  @IsBoolean()
+  expired: boolean;
 }
 
 export class UrlResponseDto {
