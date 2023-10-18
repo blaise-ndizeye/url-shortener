@@ -7,9 +7,10 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { UserInterceptor } from './user/interceptos/user.interceptor';
 import { AuthGuard } from './user/guards/user.guard';
 import { UrlModule } from './url/url.module';
+import { CustomConfigModule } from './config/config.module';
 
 @Module({
-  imports: [UserModule, UrlModule],
+  imports: [UserModule, UrlModule, CustomConfigModule],
   controllers: [AppController],
   providers: [
     AppService,

@@ -5,13 +5,17 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import { SignInDto, SignUpDto, TokenPayload } from './dtos/user.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async findUserByUsername(username: string): Promise<User> {
     const user: User = await this.prismaService.user.findUnique({
@@ -24,7 +28,7 @@ export class UserService {
   }
 
   generateJWT(payload: TokenPayload): string {
-    return jwt.sign(payload, process.env.JWT_SECRET, {
+    return jwt.sign(payload, this.configService.get<string>('JWT_SECRET'), {
       expiresIn: '1d',
     });
   }

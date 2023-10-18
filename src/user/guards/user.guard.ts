@@ -8,12 +8,14 @@ import * as jwt from 'jsonwebtoken';
 import { PrismaService } from 'prisma/prisma.service';
 import { Reflector } from '@nestjs/core';
 import { TokenPayload } from '../dtos/user.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly reflector: Reflector,
+    private readonly configService: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -30,7 +32,7 @@ export class AuthGuard implements CanActivate {
 
         const payload = jwt.verify(
           token,
-          process.env.JWT_SECRET,
+          this.configService.get<string>('JWT_SECRET'),
         ) as TokenPayload;
 
         const user = await this.prismaService.user.findUnique({
