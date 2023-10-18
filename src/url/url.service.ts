@@ -1,11 +1,6 @@
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcryptjs';
-import { Request } from 'express';
-import {
-  BadRequestException,
-  Injectable,
-  NotImplementedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateShortenedUrlDto, UrlResponseDto } from './dtos/url.dto';
 import { PrismaService } from 'prisma/prisma.service';
 
@@ -14,9 +9,7 @@ export class UrlService {
   constructor(private readonly prismaService: PrismaService) {}
 
   private generateShortenedUrl(): string {
-    const randomString = crypto.randomBytes(5).toString('hex');
-
-    return randomString;
+    return crypto.randomBytes(5).toString('hex');
   }
 
   async createShortenedUrl(
@@ -32,7 +25,9 @@ export class UrlService {
       throw new BadRequestException('expiration date must be in future');
     }
 
-    const hashedUrlPassword = password ? bcrypt.hashSync(password) : undefined;
+    const hashedUrlPassword = password
+      ? bcrypt.hashSync(password, 10)
+      : undefined;
 
     let shortenedUrl = this.generateShortenedUrl();
 

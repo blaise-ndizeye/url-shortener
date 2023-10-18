@@ -49,6 +49,23 @@ export class AppService {
       }
     }
 
+    const createClick = this.prismaService.click.create({
+      data: {
+        url_id: urlToNavigate.id,
+      },
+    });
+
+    const increaseClickNumber = this.prismaService.url.update({
+      where: {
+        id: urlToNavigate.id,
+      },
+      data: {
+        number_of_clicks: urlToNavigate.number_of_clicks + 1,
+      },
+    });
+
+    await Promise.all([createClick, increaseClickNumber]);
+
     return { url: urlToNavigate.original_url };
   }
 }
