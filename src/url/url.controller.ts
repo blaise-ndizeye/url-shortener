@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -35,7 +36,7 @@ export class UrlController {
   createShortenedUrl(
     @Body() body: CreateShortenedUrlDto,
     @User() user: TokenPayload,
-  ): Promise<UrlResponseDto> {
+  ) {
     return this.urlService.createShortenedUrl(body, user.id);
   }
 
@@ -47,5 +48,14 @@ export class UrlController {
     @User() user: TokenPayload,
   ) {
     return this.urlService.updateShortenedUrl(urlId, body, user.id);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Delete(':urlId')
+  deleteShortenedUrl(
+    @Param('urlId', ParseIntPipe) urlId: number,
+    @User() user: TokenPayload,
+  ) {
+    return this.urlService.deleteShortenedUrl(urlId, user.id);
   }
 }

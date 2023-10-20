@@ -154,4 +154,20 @@ export class UrlService {
 
     return new UrlResponseDto(updatedUrl);
   }
+
+  async deleteShortenedUrl(urlId: number, userId: number) {
+    const urlTodelete = await this.findOneUrl(urlId, userId);
+
+    await this.prismaService.click.deleteMany({
+      where: {
+        url_id: urlTodelete.id,
+      },
+    });
+
+    await this.prismaService.url.delete({
+      where: {
+        id: urlTodelete.id,
+      },
+    });
+  }
 }
