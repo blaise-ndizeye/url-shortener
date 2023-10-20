@@ -47,6 +47,14 @@ export class UrlResponseDto {
   id: number;
 
   @Exclude()
+  number_of_clicks: number;
+
+  @Expose()
+  get numberOfClicks() {
+    return this.number_of_clicks;
+  }
+
+  @Exclude()
   short_url: string;
 
   @Expose()
