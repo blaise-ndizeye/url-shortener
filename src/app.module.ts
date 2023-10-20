@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { PrismaService } from 'prisma/prisma.service';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { UserInterceptor } from './user/interceptos/user.interceptor';
 import { AuthGuard } from './user/guards/user.guard';
 import { UrlModule } from './url/url.module';

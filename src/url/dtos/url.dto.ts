@@ -1,4 +1,5 @@
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { ConfigService } from '@nestjs/config';
+import { Exclude, Expose } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
@@ -23,6 +24,11 @@ export class CreateShortenedUrlDto {
   password: string;
 }
 
+export class UpdateShortenedUrlDto extends CreateShortenedUrlDto {
+  @IsOptional()
+  originalUrl: string;
+}
+
 export class UrlFiltersDto {
   @IsOptional()
   @IsString()
@@ -43,9 +49,10 @@ export class UrlResponseDto {
   @Exclude()
   short_url: string;
 
-  @Expose({ name: 'shortUrl' })
-  shortUrl() {
-    const hostname = process.env.HOSTNAME;
+  @Expose()
+  get shortUrl() {
+    const configService = new ConfigService();
+    const hostname = configService.get<string>('HOSTNAME');
 
     return `${hostname}/${this.short_url}`;
   }
@@ -53,24 +60,24 @@ export class UrlResponseDto {
   @Exclude()
   original_url: string;
 
-  @Expose({ name: 'originalUrl' })
-  originalUrl() {
+  @Expose()
+  get originalUrl() {
     return this.original_url;
   }
 
   @Exclude()
   is_password_protected: boolean;
 
-  @Expose({ name: 'isPasswordProtected' })
-  isPasswordProtected() {
+  @Expose()
+  get isPasswordProtected() {
     return this.is_password_protected;
   }
 
   @Exclude()
   expires_at: Date | undefined;
 
-  @Expose({ name: 'expiresAt' })
-  expiresAt() {
-    return this.expires_at;
+  @Expose()
+  get expiresAt() {
+    return this?.expires_at;
   }
 }

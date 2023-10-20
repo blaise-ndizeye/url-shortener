@@ -1,7 +1,17 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { UrlService } from './url.service';
 import {
   CreateShortenedUrlDto,
+  UpdateShortenedUrlDto,
   UrlFiltersDto,
   UrlResponseDto,
 } from './dtos/url.dto';
@@ -27,5 +37,15 @@ export class UrlController {
     @User() user: TokenPayload,
   ): Promise<UrlResponseDto> {
     return this.urlService.createShortenedUrl(body, user.id);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Put(':urlId')
+  updateShortenedUrl(
+    @Param('urlId', ParseIntPipe) urlId: number,
+    @Body() body: UpdateShortenedUrlDto,
+    @User() user: TokenPayload,
+  ) {
+    return this.urlService.updateShortenedUrl(urlId, body, user.id);
   }
 }
