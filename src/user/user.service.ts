@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
@@ -87,5 +88,45 @@ export class UserService {
     });
 
     return allUsers;
+  }
+
+  async deleteUser(userId: number) {
+    const userToDelete = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!userToDelete) {
+      throw new NotFoundException();
+    }
+
+    const userUrls = await this.prismaService.url.findMany({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    const promise1 = this.prismaService.click.deleteMany({
+      where: {
+        url_id: {
+          in: [...userUrls.map((url) => url.id)],
+        },
+      },
+    });
+
+    const promise2 = this.prismaService.url.deleteMany({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    const promise3 = this.prismaService.user.delete({
+      where: {
+        id: userId,
+      },
+    });
+
+    await Promise.all([promise1, promise2, promise3]);
   }
 }
