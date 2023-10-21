@@ -1,4 +1,5 @@
 import { ConfigService } from '@nestjs/config';
+import { Click } from '@prisma/client';
 import { Exclude, Expose } from 'class-transformer';
 import {
   IsBoolean,
@@ -45,6 +46,14 @@ export class UrlResponseDto {
   }
 
   id: number;
+  lastClickedDate: Date | undefined;
+
+  @Exclude()
+  clicks:
+    | {
+        clicked_at: Date;
+      }[]
+    | undefined;
 
   @Exclude()
   number_of_clicks: number;

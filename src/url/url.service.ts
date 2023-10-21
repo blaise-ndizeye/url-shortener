@@ -19,22 +19,24 @@ export class UrlService {
   constructor(private readonly prismaService: PrismaService) {}
 
   private generateShortenedUrl(): string {
-    return crypto.randomBytes(5).toString('hex');
+    const randomBytes = crypto.randomBytes(5);
+    const shortenedUrl = randomBytes.toString('hex');
+    return shortenedUrl;
   }
 
   private async findOneUrl(urlId: number, userId: number): Promise<Url> {
-    const urlFound = await this.prismaService.url.findUnique({
+    const url = await this.prismaService.url.findUnique({
       where: {
         id: urlId,
         user_id: userId,
       },
     });
 
-    if (!urlFound) {
+    if (!url) {
       throw new NotFoundException();
     }
 
-    return urlFound;
+    return url;
   }
 
   async getUserUrls(
@@ -51,7 +53,17 @@ export class UrlService {
         short_url: true,
         original_url: true,
         is_password_protected: true,
+        created_at: true,
         ...(expired && { expires_at: true }),
+        clicks: {
+          select: {
+            clicked_at: true,
+          },
+          orderBy: {
+            clicked_at: 'desc',
+          },
+          take: 1,
+        },
       },
       where: {
         user_id: userId,
@@ -63,7 +75,12 @@ export class UrlService {
       urls = urls.filter((url) => url.expires_at < toDay);
     }
 
-    return urls.map((url) => new UrlResponseDto(url));
+    return urls.map((url) => {
+      const lastUrlClick = url.clicks?.[0];
+      const dto = new UrlResponseDto(url);
+      dto.lastClickedDate = lastUrlClick?.clicked_at;
+      return dto;
+    });
   }
 
   async createShortenedUrl(
@@ -156,17 +173,17 @@ export class UrlService {
   }
 
   async deleteShortenedUrl(urlId: number, userId: number) {
-    const urlTodelete = await this.findOneUrl(urlId, userId);
+    const urlToDelete = await this.findOneUrl(urlId, userId);
 
     await this.prismaService.click.deleteMany({
       where: {
-        url_id: urlTodelete.id,
+        url_id: urlToDelete.id,
       },
     });
 
     await this.prismaService.url.delete({
       where: {
-        id: urlTodelete.id,
+        id: urlToDelete.id,
       },
     });
   }
