@@ -44,7 +44,7 @@ export class UrlService {
     filters: UrlFiltersDto,
   ): Promise<UrlResponseDto[]> {
     const { expired, search } = filters;
-    const toDay = new Date();
+    const currentDate = new Date();
 
     let urls = await this.prismaService.url.findMany({
       select: {
@@ -72,7 +72,7 @@ export class UrlService {
     });
 
     if (expired) {
-      urls = urls.filter((url) => url.expires_at < toDay);
+      urls = urls.filter((url) => url.expires_at < currentDate);
     }
 
     return urls.map((url) => {
