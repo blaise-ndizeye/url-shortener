@@ -71,4 +71,21 @@ export class UserService {
 
     return this.generateJWT({ id: user.id });
   }
+
+  async getAllUsers(userId: number) {
+    const allUsers = await this.prismaService.user.findMany({
+      where: {
+        id: {
+          not: userId,
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+      },
+    });
+
+    return allUsers;
+  }
 }
