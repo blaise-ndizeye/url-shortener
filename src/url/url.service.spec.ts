@@ -1,11 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import * as bcrypt from 'bcryptjs';
 import { UrlService } from './url.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateShortenedUrlDto, UrlFiltersDto } from './dtos/url.dto';
+import {
+  CreateShortenedUrlDto,
+  UpdateShortenedUrlDto,
+  UrlFiltersDto,
+} from './dtos/url.dto';
 
 describe('UrlService', () => {
   let service: UrlService;
   let prismaService: PrismaService;
+
+  const referenceObject = {
+    id: 1,
+    original_url: 'https://example.com',
+    short_url: 'https://short.example.com',
+    number_of_clicks: 0,
+    created_at: new Date(),
+    updated_at: new Date(),
+    expires_at: new Date(),
+    is_password_protected: false,
+    password: '',
+    user_id: 1,
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -16,18 +34,8 @@ describe('UrlService', () => {
     prismaService = module.get<PrismaService>(PrismaService);
 
     jest.spyOn(prismaService.url, 'findMany').mockResolvedValue([]);
-    jest.spyOn(prismaService.url, 'create').mockResolvedValue({
-      id: 1,
-      original_url: 'https://example.com',
-      short_url: 'https://short.example.com',
-      number_of_clicks: 0,
-      created_at: new Date(),
-      updated_at: new Date(),
-      expires_at: new Date(),
-      is_password_protected: false,
-      password: '',
-      user_id: 1,
-    });
+    jest.spyOn(prismaService.url, 'create').mockResolvedValue(referenceObject);
+    jest.spyOn(prismaService.url, 'update').mockResolvedValue(referenceObject);
   });
 
   afterEach(() => {
@@ -96,6 +104,60 @@ describe('UrlService', () => {
       const result = await service.getUserUrls(userId, filters);
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('updateShortenedUrl', () => {
+    it('should call prismaService.url.update with the correct arguments', async () => {
+      const urlId = 8;
+      const userId = 3;
+      const shortUrl = expect.any(String);
+
+      const updateUrlDto: UpdateShortenedUrlDto = {
+        originalUrl: 'https://example.com',
+        expirationDate: new Date(2024, 1, 1),
+        password: expect.any(String),
+      };
+
+      await service.updateShortenedUrl(urlId, updateUrlDto, userId);
+
+      expect(prismaService.url.update).toHaveBeenCalledWith({
+        where: {
+          id: urlId,
+        },
+        data: {
+          original_url: updateUrlDto.originalUrl,
+          expires_at: updateUrlDto.expirationDate,
+          is_password_protected: true,
+          password: updateUrlDto.password,
+          short_url: shortUrl,
+        },
+        select: {
+          id: true,
+          short_url: true,
+          original_url: true,
+          is_password_protected: true,
+          ...(updateUrlDto.expirationDate && { expires_at: true }),
+        },
+      });
+    });
+
+    it('should return the updated URL', async () => {
+      const urlId = 8;
+      const userId = 3;
+      const updateUrlDto: UpdateShortenedUrlDto = {
+        originalUrl: 'https://example.com',
+        expirationDate: new Date(2024, 1, 1),
+        password: 'password',
+      };
+
+      const result = await service.updateShortenedUrl(
+        urlId,
+        updateUrlDto,
+        userId,
+      );
+
+      expect(result).toEqual(referenceObject);
     });
   });
 });

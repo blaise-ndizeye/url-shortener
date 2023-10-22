@@ -17,7 +17,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class UrlService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  private generateShortenedUrl(): string {
+  generateShortenedUrl(): string {
     const randomBytes = crypto.randomBytes(5);
     const shortenedUrl = randomBytes.toString('hex');
     return shortenedUrl;
@@ -144,7 +144,7 @@ export class UrlService {
     }
 
     const hashedUrlPassword = password
-      ? bcrypt.hashSync(password, 10)
+      ? bcrypt.hashSync(String(password), 10)
       : undefined;
 
     let shortenedUrl = this.generateShortenedUrl();
