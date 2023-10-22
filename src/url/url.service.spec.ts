@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UrlService } from './url.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateShortenedUrlDto } from './dtos/url.dto';
+import { CreateShortenedUrlDto, UrlFiltersDto } from './dtos/url.dto';
 
 describe('UrlService', () => {
   let service: UrlService;
@@ -53,9 +53,49 @@ describe('UrlService', () => {
       ).resolves.toBeTruthy();
       expect(prismaService.url.create).toHaveBeenCalled();
     });
-
-    // Add more test cases to cover other possible breaches
   });
 
-  // Add more test cases for other functions in UrlService
+  describe('getUserUrls', () => {
+    it('should call prismaService.url.findMany with correct arguments', async () => {
+      const userId = 1;
+      const filters: UrlFiltersDto = { expired: false, search: 'y' };
+
+      await service.getUserUrls(userId, filters);
+
+      expect(prismaService.url.findMany).toHaveBeenCalledWith({
+        select: {
+          id: true,
+          number_of_clicks: true,
+          short_url: true,
+          original_url: true,
+          is_password_protected: true,
+          created_at: true,
+          ...(filters.expired && { expires_at: true }),
+          clicks: {
+            select: {
+              clicked_at: true,
+            },
+            orderBy: {
+              clicked_at: 'desc',
+            },
+            take: 1,
+          },
+        },
+        where: {
+          user_id: userId,
+          ...(filters.expired && { expires_at: { lt: new Date() } }),
+          ...(filters.search && { original_url: { contains: filters.search } }),
+        },
+      });
+    });
+
+    it('should return array of user URLs', async () => {
+      const userId = 1;
+      const filters: UrlFiltersDto = { expired: false, search: 'example' };
+
+      const result = await service.getUserUrls(userId, filters);
+
+      expect(result).toEqual([]);
+    });
+  });
 });
