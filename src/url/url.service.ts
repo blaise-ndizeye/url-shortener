@@ -11,8 +11,7 @@ import {
   UrlFiltersDto,
   UrlResponseDto,
 } from './dtos/url.dto';
-import { PrismaService } from 'prisma/prisma.service';
-import { Url } from '@prisma/client';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class UrlService {
@@ -24,7 +23,10 @@ export class UrlService {
     return shortenedUrl;
   }
 
-  private async findOneUrl(urlId: number, userId: number): Promise<Url> {
+  private async findOneUrl(
+    urlId: number,
+    userId: number,
+  ): Promise<UrlResponseDto> {
     const url = await this.prismaService.url.findUnique({
       where: {
         id: urlId,
@@ -36,7 +38,7 @@ export class UrlService {
       throw new NotFoundException();
     }
 
-    return url;
+    return new UrlResponseDto(url);
   }
 
   async getUserUrls(
