@@ -36,6 +36,8 @@ describe('UrlService', () => {
     jest.spyOn(prismaService.url, 'findMany').mockResolvedValue([]);
     jest.spyOn(prismaService.url, 'create').mockResolvedValue(referenceObject);
     jest.spyOn(prismaService.url, 'update').mockResolvedValue(referenceObject);
+    jest.spyOn(prismaService.url, 'delete');
+    jest.spyOn(prismaService.click, 'deleteMany');
   });
 
   afterEach(() => {
@@ -158,6 +160,27 @@ describe('UrlService', () => {
       );
 
       expect(result).toEqual(referenceObject);
+    });
+  });
+
+  describe('deleteShortenedUrl', () => {
+    it('should call prismaService.url.delete with the correct argument', async () => {
+      const urlId = 8;
+      const userId = 3;
+
+      await service.deleteShortenedUrl(urlId, userId);
+
+      expect(prismaService.click.deleteMany).toHaveBeenCalledWith({
+        where: {
+          url_id: urlId,
+        },
+      });
+
+      expect(prismaService.url.delete).toHaveBeenCalledWith({
+        where: {
+          id: urlId,
+        },
+      });
     });
   });
 });
