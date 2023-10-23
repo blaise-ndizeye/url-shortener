@@ -70,12 +70,9 @@ export class UrlService {
       where: {
         user_id: userId,
         ...(search && { original_url: { contains: search } }),
+        ...(expired && { expires_at: { lte: currentDate } }),
       },
     });
-
-    if (expired) {
-      urls = urls.filter((url) => url.expires_at < currentDate);
-    }
 
     return urls.map((url) => {
       const lastUrlClick = url.clicks?.[0];

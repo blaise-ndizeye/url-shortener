@@ -40,19 +40,22 @@ export class UrlFiltersDto {
 }
 
 export class UrlResponseDto {
-  constructor(partial: Partial<UrlResponseDto>) {
-    Object.assign(this, partial);
-  }
-
   id: number;
-  lastClickedDate: Date | undefined;
+  lastClickedDate?: Date;
 
   @Exclude()
-  clicks:
-    | {
-        clicked_at: Date;
-      }[]
-    | undefined;
+  created_at: Date;
+
+  @Exclude()
+  updated_at: Date;
+
+  @Exclude()
+  user_id: number;
+
+  @Exclude()
+  clicks?: {
+    clicked_at: Date;
+  }[];
 
   @Exclude()
   number_of_clicks: number;
@@ -90,10 +93,34 @@ export class UrlResponseDto {
   }
 
   @Exclude()
-  expires_at: Date | undefined;
+  expires_at?: Date;
 
   @Expose()
   get expiresAt() {
     return this?.expires_at;
+  }
+
+  set numberOfClicks(value: number) {
+    this.number_of_clicks = value;
+  }
+
+  set isPasswordProtected(value: boolean) {
+    this.is_password_protected = value;
+  }
+
+  set originalUrl(value: string) {
+    this.original_url = value;
+  }
+
+  set shortUrl(value: string) {
+    this.short_url = value;
+  }
+
+  set expiresAt(value: Date) {
+    this.expires_at = value;
+  }
+
+  constructor(data: Partial<UrlResponseDto>) {
+    Object.assign(this, data);
   }
 }
