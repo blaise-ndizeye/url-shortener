@@ -1,5 +1,4 @@
 import { ConfigService } from '@nestjs/config';
-import { Click } from '@prisma/client';
 import { Exclude, Expose } from 'class-transformer';
 import {
   IsBoolean,
