@@ -169,18 +169,22 @@ export class UrlService {
   }
 
   async deleteShortenedUrl(urlId: number, userId: number) {
-    const urlToDelete = await this.findOneUrl(urlId, userId);
+    await this.findOneUrl(urlId, userId);
 
     await this.prismaService.click.deleteMany({
       where: {
-        url_id: urlToDelete.id,
+        url_id: urlId,
       },
     });
 
-    await this.prismaService.url.delete({
+    const deleteResult = await this.prismaService.url.delete({
       where: {
-        id: urlToDelete.id,
+        id: urlId,
       },
     });
+
+    if (!deleteResult) {
+      throw new NotFoundException('URL not found');
+    }
   }
 }
