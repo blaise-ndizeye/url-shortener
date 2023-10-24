@@ -215,73 +215,71 @@ describe('UrlService', () => {
     });
   });
 
-  describe('ShortenedUrlService', () => {
-    describe('deleteShortenedUrl', () => {
-      it('should delete the shortened URL and return true', async () => {
-        // Mock the inputs
-        const urlId = 1;
-        const userId = 1;
+  describe('deleteShortenedUrl', () => {
+    it('should delete the shortened URL and return true', async () => {
+      // Mock the inputs
+      const urlId = 1;
+      const userId = 1;
 
-        const valueToResolve = {
-          id: urlId,
-          original_url: 'https://example.com/original-url',
-          short_url: 'c215ec1d43',
-          number_of_clicks: 0,
-          created_at: new Date(),
-          updated_at: new Date(),
-          expires_at: new Date(2024, 1, 1),
-          is_password_protected: true,
-          password: 'password123',
-          user_id: userId,
-        };
+      const valueToResolve = {
+        id: urlId,
+        original_url: 'https://example.com/original-url',
+        short_url: 'c215ec1d43',
+        number_of_clicks: 0,
+        created_at: new Date(),
+        updated_at: new Date(),
+        expires_at: new Date(2024, 1, 1),
+        is_password_protected: true,
+        password: 'password123',
+        user_id: userId,
+      };
 
-        const findOneUrlMock = jest
-          .spyOn(service, 'findOneUrl')
-          .mockResolvedValue(valueToResolve) as jest.Mock;
+      const findOneUrlMock = jest
+        .spyOn(service, 'findOneUrl')
+        .mockResolvedValue(valueToResolve) as jest.Mock;
 
-        const deleteManyClicksMock = jest
-          .spyOn(prismaService.click, 'deleteMany')
-          .mockResolvedValue({ count: 0 }) as jest.Mock;
+      const deleteManyClicksMock = jest
+        .spyOn(prismaService.click, 'deleteMany')
+        .mockResolvedValue({ count: 0 }) as jest.Mock;
 
-        const deleteUrlsMock = jest
-          .spyOn(prismaService.url, 'delete')
-          .mockResolvedValue(valueToResolve) as jest.Mock;
+      const deleteUrlsMock = jest
+        .spyOn(prismaService.url, 'delete')
+        .mockResolvedValue(valueToResolve) as jest.Mock;
 
-        service.findOneUrl = findOneUrlMock;
-        prismaService.click.deleteMany = deleteManyClicksMock;
-        prismaService.url.delete = deleteUrlsMock;
+      service.findOneUrl = findOneUrlMock;
+      prismaService.click.deleteMany = deleteManyClicksMock;
+      prismaService.url.delete = deleteUrlsMock;
 
-        const result = await service.deleteShortenedUrl(urlId, userId);
+      const result = await service.deleteShortenedUrl(urlId, userId);
 
-        expect(findOneUrlMock).toHaveBeenCalledWith(urlId, userId);
+      expect(findOneUrlMock).toHaveBeenCalledWith(urlId, userId);
 
-        expect(deleteManyClicksMock).toHaveBeenCalledWith({
-          where: { url_id: urlId },
-        });
-
-        expect(deleteUrlsMock).toHaveBeenCalledWith({
-          where: { id: urlId },
-        });
-
-        // Expect the result to be true
-        expect(result).toBe(undefined);
+      expect(deleteManyClicksMock).toHaveBeenCalledWith({
+        where: { url_id: urlId },
       });
 
-      it('should throw a NotFoundException when the URL does not exist', async () => {
-        // Mock the inputs
-        const urlId = 1;
-        const userId = 1;
-
-        jest.spyOn(service, 'findOneUrl').mockResolvedValue(null) as jest.Mock;
-
-        jest
-          .spyOn(prismaService.url, 'delete')
-          .mockRejectedValueOnce(new NotFoundException('URL not found'));
-
-        await expect(
-          service.deleteShortenedUrl(urlId, userId),
-        ).rejects.toThrowError(NotFoundException);
+      expect(deleteUrlsMock).toHaveBeenCalledWith({
+        where: { id: urlId },
       });
+
+      // Expect the result to be true
+      expect(result).toBe(undefined);
+    });
+
+    it('should throw a NotFoundException when the URL does not exist', async () => {
+      // Mock the inputs
+      const urlId = 1;
+      const userId = 1;
+
+      jest.spyOn(service, 'findOneUrl').mockResolvedValue(null) as jest.Mock;
+
+      jest
+        .spyOn(prismaService.url, 'delete')
+        .mockRejectedValueOnce(new NotFoundException('URL not found'));
+
+      await expect(
+        service.deleteShortenedUrl(urlId, userId),
+      ).rejects.toThrowError(NotFoundException);
     });
   });
 });
