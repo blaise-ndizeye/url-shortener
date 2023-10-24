@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,7 +10,12 @@ import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
-import { SignInDto, SignUpDto, TokenPayload } from './dtos/user.dto';
+import {
+  SignInDto,
+  SignUpDto,
+  TokenPayload,
+  UserResponseDto,
+} from './dtos/user.dto';
 
 @Injectable()
 export class UserService {
@@ -90,7 +96,7 @@ export class UserService {
     return allUsers;
   }
 
-  async deleteUser(userId: number) {
+  async deleteUser(userId: number, adminId: number) {
     const userToDelete = await this.prismaService.user.findUnique({
       where: {
         id: userId,
@@ -99,6 +105,10 @@ export class UserService {
 
     if (!userToDelete) {
       throw new NotFoundException();
+    }
+
+    if (userToDelete.id === adminId) {
+      throw new ForbiddenException();
     }
 
     const userUrls = await this.prismaService.url.findMany({
@@ -128,5 +138,33 @@ export class UserService {
     });
 
     await Promise.all([promise1, promise2, promise3]);
+  }
+
+  async updateUser(userId: number, body: SignUpDto) {
+    const userToUpdate = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!userToUpdate) {
+      throw new NotFoundException();
+    }
+
+    const hashedPassword = body.password
+      ? await bcrypt.hash(String(body.password), 10)
+      : undefined;
+
+    const updatedUser = await this.prismaService.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        ...(body?.username && { username: body.username }),
+        ...(hashedPassword && { password: hashedPassword }),
+      },
+    });
+
+    return new UserResponseDto(updatedUser);
   }
 }

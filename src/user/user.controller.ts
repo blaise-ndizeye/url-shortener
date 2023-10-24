@@ -6,8 +6,14 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
 } from '@nestjs/common';
-import { SignInDto, SignUpDto, TokenPayload } from './dtos/user.dto';
+import {
+  SignInDto,
+  SignUpDto,
+  TokenPayload,
+  UpdateUserDto,
+} from './dtos/user.dto';
 import { UserService } from './user.service';
 import { Roles } from './decorators/role.decorator';
 import { UserRole } from '@prisma/client';
@@ -33,9 +39,18 @@ export class UserController {
     return this.userService.signIn(body);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.USER)
+  @Put()
+  updateUser(@User() user: TokenPayload, @Body() body: UpdateUserDto) {
+    return this.userService.updateUser(user.id, body);
+  }
+
   @Roles(UserRole.ADMIN)
   @Delete(':userId')
-  deleteUser(@Param('userId', ParseIntPipe) userId: number) {
-    return this.userService.deleteUser(userId);
+  deleteUser(
+    @Param('userId', ParseIntPipe) userId: number,
+    @User() admin: TokenPayload,
+  ) {
+    return this.userService.deleteUser(userId, admin.id);
   }
 }
