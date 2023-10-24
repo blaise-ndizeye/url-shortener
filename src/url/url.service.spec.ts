@@ -2,6 +2,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UrlService } from './url.service';
 import {
   CreateShortenedUrlDto,
+  UpdateShortenedUrlDto,
   UrlFiltersDto,
   UrlResponseDto,
 } from './dtos/url.dto';
@@ -52,6 +53,78 @@ describe('UrlService', () => {
 
       expect(result.originalUrl).toEqual(createShortenedUrlDto.originalUrl);
       expect(result.shortUrl).toEqual(expect.any(String));
+    });
+  });
+
+  describe('UpdateUserUrls', () => {
+    it('should update a url and return an updated url', async () => {
+      const userId = 1;
+      const urlId = 1;
+
+      const updateShortenedUrlDto: UpdateShortenedUrlDto = {
+        expirationDate: new Date(2023, 12, 30),
+        originalUrl: 'https://youtube.com',
+        password: 'password123',
+      };
+
+      const valueToResolve = {
+        id: urlId,
+        original_url: updateShortenedUrlDto.originalUrl,
+        short_url: 'c215ec1d43',
+        number_of_clicks: 0,
+        created_at: new Date(),
+        updated_at: new Date(),
+        expires_at: updateShortenedUrlDto.expirationDate,
+        is_password_protected: true,
+        password: updateShortenedUrlDto.password,
+        user_id: userId,
+      };
+
+      //Mock the behavior of the `findOneUrl` method to return a valid URL
+      jest
+        .spyOn(service, 'findOneUrl')
+        .mockResolvedValue(valueToResolve) as jest.Mock;
+
+      const updateMock = jest
+        .spyOn(prismaService.url, 'update')
+        .mockResolvedValue(valueToResolve) as jest.Mock;
+
+      prismaService.url.update = updateMock;
+
+      const result = await service.updateShortenedUrl(
+        urlId,
+        updateShortenedUrlDto,
+        userId,
+      );
+
+      expect(service.findOneUrl).toHaveBeenCalledWith(urlId, userId);
+
+      expect(updateMock).toHaveBeenCalledWith({
+        where: {
+          id: urlId,
+        },
+        data: {
+          ...(updateShortenedUrlDto.originalUrl && {
+            original_url: updateShortenedUrlDto.originalUrl,
+          }),
+          ...(updateShortenedUrlDto.expirationDate && {
+            expires_at: updateShortenedUrlDto.expirationDate,
+          }),
+          password: expect.any(String),
+          short_url: expect.any(String),
+          is_password_protected: true,
+        },
+        select: {
+          id: true,
+          short_url: true,
+          original_url: true,
+          is_password_protected: true,
+          ...(updateShortenedUrlDto.expirationDate && {
+            expires_at: true,
+          }),
+        },
+      });
+      expect(result.originalUrl).toEqual(updateShortenedUrlDto.originalUrl);
     });
   });
 
