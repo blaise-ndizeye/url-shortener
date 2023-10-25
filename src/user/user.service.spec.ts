@@ -1,8 +1,15 @@
 import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../prisma/prisma.service';
-import { SignUpDto, UpdateUserDto, UserResponseDto } from './dtos/user.dto';
+import {
+  SignInDto,
+  SignUpDto,
+  UpdateUserDto,
+  UserResponseDto,
+} from './dtos/user.dto';
 import { UserService } from './user.service';
 import { UserRole } from '@prisma/client';
+import { BadRequestException } from '@nestjs/common';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -46,6 +53,70 @@ describe('UserService', () => {
           password: expect.any(String),
         },
       });
+    });
+  });
+
+  describe('signIn', () => {
+    it('should return a JWT token when valid credentials are provided', async () => {
+      // Mock the inputs
+      const signInDto: SignInDto = {
+        username: 'testuser',
+        password: 'password123',
+      };
+
+      // Mock the expected output
+      const expectedToken = expect.any(String);
+
+      const findUserByUsernameMock = jest
+        .spyOn(userService, 'findUserByUsername')
+        .mockResolvedValue({
+          id: 1,
+          username: signInDto.username,
+          password: bcrypt.hashSync(signInDto.password, 10),
+          role: UserRole.USER,
+        });
+
+      const compareMock = jest.spyOn(bcrypt, 'compare');
+
+      const result = await userService.signIn(signInDto);
+
+      expect(result).toEqual(expectedToken);
+
+      expect(findUserByUsernameMock).toHaveBeenCalledWith(signInDto.username);
+
+      expect(compareMock).toHaveBeenCalledWith(
+        signInDto.password,
+        expect.any(String),
+      );
+    });
+
+    it('should throw BadRequestException when invalid credentials are provided', async () => {
+      const signInDto: SignInDto = {
+        username: 'testuser',
+        password: 'invalidPassword',
+      };
+
+      const findUserByUsernameMock = jest
+        .spyOn(userService, 'findUserByUsername')
+        .mockResolvedValue({
+          id: 1,
+          username: signInDto.username,
+          password: 'hashedPassword',
+          role: UserRole.USER,
+        });
+
+      const compareMock = jest.spyOn(bcrypt, 'compare');
+
+      await expect(userService.signIn(signInDto)).rejects.toThrowError(
+        BadRequestException,
+      );
+
+      expect(findUserByUsernameMock).toHaveBeenCalledWith(signInDto.username);
+
+      expect(compareMock).toHaveBeenCalledWith(
+        signInDto.password,
+        expect.any(String),
+      );
     });
   });
 
