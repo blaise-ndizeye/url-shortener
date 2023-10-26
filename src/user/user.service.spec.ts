@@ -8,8 +8,8 @@ import {
   UserResponseDto,
 } from './dtos/user.dto';
 import { UserService } from './user.service';
-import { UserRole } from '@prisma/client';
-import { BadRequestException } from '@nestjs/common';
+import { Url, UserRole } from '@prisma/client';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -177,6 +177,100 @@ describe('UserService', () => {
         data: {
           username: updateDto.username,
           password: expect.any(String),
+        },
+      });
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('should delete the user and return undefined', async () => {
+      const userId = 1;
+      const adminId = 2;
+
+      const userToResolve = {
+        id: userId,
+        username: 'User1',
+        role: UserRole.USER,
+        password: expect.any(String),
+      };
+
+      const userToDeleteMock = jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(userToResolve) as jest.Mock;
+
+      const userUrlsMock = jest
+        .spyOn(prismaService.url, 'findMany')
+        .mockResolvedValue([]) as jest.Mock;
+
+      const deleteManyClicksMock = jest
+        .spyOn(prismaService.click, 'deleteMany')
+        .mockResolvedValue({ count: 0 }) as jest.Mock;
+
+      const deleteManyUrlsMock = jest
+        .spyOn(prismaService.url, 'deleteMany')
+        .mockResolvedValue({ count: 0 }) as jest.Mock;
+
+      const deleteUserMock = jest
+        .spyOn(prismaService.user, 'delete')
+        .mockResolvedValue(userToResolve) as jest.Mock;
+
+      const result = await userService.deleteUser(userId, adminId);
+
+      expect(userToDeleteMock).toHaveBeenCalledWith({
+        where: {
+          id: userId,
+        },
+      });
+
+      expect(userUrlsMock).toHaveBeenCalledWith({
+        where: {
+          user_id: userId,
+        },
+      });
+
+      expect(deleteManyClicksMock).toHaveBeenCalledWith({
+        where: {
+          url_id: {
+            in: [...userUrlsMock.mock.calls.map((url: Url) => url.id)],
+          },
+        },
+      });
+
+      expect(deleteManyUrlsMock).toHaveBeenCalledWith({
+        where: {
+          user_id: userId,
+        },
+      });
+
+      expect(deleteUserMock).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('should throw forbidden error if user to delete is also an operating admin', async () => {
+      const userId = 1;
+      const adminId = 1;
+
+      const userToResolve = {
+        id: userId,
+        username: 'User1',
+        role: UserRole.USER,
+        password: expect.any(String),
+      };
+
+      const userToDeleteMock = jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockResolvedValue(userToResolve) as jest.Mock;
+
+      await expect(userService.deleteUser(userId, adminId)).rejects.toThrow(
+        ForbiddenException,
+      );
+
+      expect(userToDeleteMock).toHaveBeenCalledWith({
+        where: {
+          id: userId,
         },
       });
     });
