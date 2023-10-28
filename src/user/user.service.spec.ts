@@ -27,10 +27,12 @@ describe('UserService', () => {
         password: 'password123',
       };
 
-      // Mock the expected output
       const expectedToken = expect.any(String);
 
-      // Mock the `create` method of the `prismaService.user` object
+      jest
+        .spyOn(userService, 'findUserByUsername')
+        .mockResolvedValue(undefined);
+
       const createMock = jest
         .spyOn(prismaService.user, 'create')
         .mockResolvedValue({
@@ -40,13 +42,10 @@ describe('UserService', () => {
           password: expect.any(String),
         });
 
-      // Call the `signUp` function
       const result = await userService.signUp(signUpDto);
 
-      // Expect the result to match the expected output
       expect(result).toEqual(expectedToken);
 
-      // Expect the `create` method to have been called with the correct arguments
       expect(createMock).toHaveBeenCalledWith({
         data: {
           username: signUpDto.username,
@@ -122,14 +121,13 @@ describe('UserService', () => {
 
   describe('updateUser', () => {
     it('should update the user and return the updated user response', async () => {
-      // Mock the inputs
       const userId = 1;
       const updateDto: UpdateUserDto = {
         username: 'newusername',
-        password: 'password123',
+        oldPassword: 'password123',
+        newPassword: 'newpassword',
       };
 
-      // Mock the expected output
       const expectedUpdatedUser: UserResponseDto = {
         id: userId,
         username: updateDto.username,
@@ -137,15 +135,12 @@ describe('UserService', () => {
         password: expect.any(String),
       };
 
-      // Mock the `findUnique` and `update` methods of the `prismaService.user` object
-      const findUniqueMock = jest
-        .spyOn(prismaService.user, 'findUnique')
-        .mockResolvedValue({
-          id: userId,
-          username: updateDto.username,
-          password: expect.any(String),
-          role: UserRole.USER,
-        });
+      jest.spyOn(userService, 'findUserById').mockResolvedValue({
+        id: 1,
+        username: updateDto.username,
+        role: UserRole.USER,
+        password: bcrypt.hashSync(updateDto.oldPassword, 10),
+      });
 
       const updateMock = jest
         .spyOn(prismaService.user, 'update')
@@ -156,20 +151,10 @@ describe('UserService', () => {
           role: UserRole.USER,
         });
 
-      // Call the `updateUser` function
       const result = await userService.updateUser(userId, updateDto);
 
-      // Expect the result to match the expected output
       expect(result).toEqual(expectedUpdatedUser);
 
-      // Expect the `findUnique` method to have been called with the correct arguments
-      expect(findUniqueMock).toHaveBeenCalledWith({
-        where: {
-          id: userId,
-        },
-      });
-
-      // Expect the `update` method to have been called with the correct arguments
       expect(updateMock).toHaveBeenCalledWith({
         where: {
           id: userId,

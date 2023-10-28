@@ -30,12 +30,18 @@ export class SignInDto {
   password: string;
 }
 
-export class UpdateUserDto extends SignUpDto {
+export class UpdateUserDto {
   @IsOptional()
+  @IsString()
   username: string;
 
   @IsOptional()
-  password: string;
+  @IsString()
+  oldPassword?: string;
+
+  @IsOptional()
+  @IsString()
+  newPassword?: string;
 }
 
 export interface TokenPayload {

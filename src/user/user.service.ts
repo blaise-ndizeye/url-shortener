@@ -14,6 +14,7 @@ import {
   SignInDto,
   SignUpDto,
   TokenPayload,
+  UpdateUserDto,
   UserResponseDto,
 } from './dtos/user.dto';
 
@@ -28,6 +29,16 @@ export class UserService {
     const user: User = await this.prismaService.user.findUnique({
       where: {
         username,
+      },
+    });
+
+    return user;
+  }
+
+  async findUserById(userId: number): Promise<User> {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
       },
     });
 
@@ -140,19 +151,26 @@ export class UserService {
     await Promise.all([promise1, promise2, promise3]);
   }
 
-  async updateUser(userId: number, body: SignUpDto) {
-    const userToUpdate = await this.prismaService.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
+  async updateUser(userId: number, body: UpdateUserDto) {
+    const userToUpdate = await this.findUserById(userId);
 
     if (!userToUpdate) {
       throw new NotFoundException();
     }
 
-    const hashedPassword = body.password
-      ? await bcrypt.hash(String(body.password), 10)
+    if (body?.newPassword && !body?.oldPassword) {
+      throw new BadRequestException('old password is required');
+    }
+
+    if (
+      body?.oldPassword &&
+      !bcrypt.compareSync(body?.oldPassword, String(userToUpdate.password))
+    ) {
+      throw new BadRequestException('invalid old password');
+    }
+
+    const hashedPassword = body?.newPassword
+      ? await bcrypt.hash(String(body?.newPassword), 10)
       : undefined;
 
     const updatedUser = await this.prismaService.user.update({

@@ -1,16 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { UserRole } from '@prisma/client';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { SignInDto, SignUpDto, UserResponseDto } from './dtos/user.dto';
+import {
+  SignInDto,
+  SignUpDto,
+  UpdateUserDto,
+  UserResponseDto,
+} from './dtos/user.dto';
 import { PrismaService } from '../../prisma/prisma.service';
-import { UserRole } from '@prisma/client';
-import { BadRequestException, ConflictException } from '@nestjs/common';
 
 describe('UserController', () => {
   let controller: UserController;
   let service: UserService;
+  let prismaService: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -20,6 +26,7 @@ describe('UserController', () => {
 
     controller = module.get<UserController>(UserController);
     service = module.get<UserService>(UserService);
+    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
@@ -111,6 +118,71 @@ describe('UserController', () => {
           role: UserRole.USER,
         }),
       ]);
+    });
+  });
+
+  describe('updateUser', () => {
+    const updateUserDto: UpdateUserDto = {
+      username: 'newusername',
+      newPassword: 'newpassword',
+      oldPassword: 'oldpassword',
+    };
+
+    it('should update a user', async () => {
+      jest.spyOn(service, 'findUserById').mockResolvedValue({
+        id: 1,
+        username: updateUserDto.username,
+        role: UserRole.USER,
+        password: bcrypt.hashSync(updateUserDto.oldPassword, 10),
+      });
+
+      jest.spyOn(service, 'updateUser').mockResolvedValue(
+        new UserResponseDto({
+          id: 1,
+          username: updateUserDto.username,
+          role: UserRole.USER,
+        }),
+      );
+
+      await expect(
+        controller.updateUser({ id: 1 }, updateUserDto),
+      ).resolves.toEqual(
+        new UserResponseDto({
+          id: 1,
+          username: updateUserDto.username,
+          role: UserRole.USER,
+        }),
+      );
+    });
+
+    it('should throw BadRequestException when newPassword is provided without oldPassword', async () => {
+      delete updateUserDto.oldPassword;
+
+      jest.spyOn(service, 'findUserById').mockResolvedValue({
+        id: 1,
+        username: updateUserDto.username,
+        role: UserRole.USER,
+        password: expect.any(String),
+      });
+
+      await expect(
+        controller.updateUser({ id: 1 }, updateUserDto),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when invalid password is provided', async () => {
+      updateUserDto.oldPassword = '123';
+
+      jest.spyOn(service, 'findUserById').mockResolvedValue({
+        id: 1,
+        username: updateUserDto.username,
+        role: UserRole.USER,
+        password: bcrypt.hashSync('randompassword', 10),
+      });
+
+      await expect(
+        controller.updateUser({ id: 1 }, updateUserDto),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });
