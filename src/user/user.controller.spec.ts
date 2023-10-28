@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { SignInDto, SignUpDto } from './dtos/user.dto';
+import { SignInDto, SignUpDto, UserResponseDto } from './dtos/user.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 import { BadRequestException, ConflictException } from '@nestjs/common';
@@ -91,6 +91,26 @@ describe('UserController', () => {
       await expect(controller.signIn(signInDto)).rejects.toThrowError(
         BadRequestException,
       );
+    });
+  });
+
+  describe('getAllUsers', () => {
+    it('should return all users', async () => {
+      jest.spyOn(service, 'getAllUsers').mockResolvedValue([
+        new UserResponseDto({
+          id: 1,
+          username: 'testuser',
+          role: UserRole.USER,
+        }),
+      ]);
+
+      await expect(controller.getAllUsers({ id: 2 })).resolves.toEqual([
+        new UserResponseDto({
+          id: 1,
+          username: 'testuser',
+          role: UserRole.USER,
+        }),
+      ]);
     });
   });
 });

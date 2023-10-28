@@ -93,7 +93,7 @@ export class UserService {
       },
     });
 
-    return allUsers;
+    return allUsers.map((user) => new UserResponseDto(user));
   }
 
   async deleteUser(userId: number, adminId: number) {
