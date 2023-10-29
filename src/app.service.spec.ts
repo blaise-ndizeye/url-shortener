@@ -92,13 +92,6 @@ describe('AppService', () => {
       const shortUrl = 'password-protected';
       const password = 'incorrect';
 
-      const urlToNavigate = {
-        id: 1,
-        short_url: shortUrl,
-        is_password_protected: true,
-        password: bcrypt.hashSync('password', 10),
-      };
-
       jest.spyOn(prismaService.url, 'findUnique').mockResolvedValue({
         id: 1,
         short_url: shortUrl,
