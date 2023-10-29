@@ -7,7 +7,7 @@ export class AppController {
 
   @Get(':shortUrl')
   @Redirect()
-  getHello(
+  goToOrginalUrl(
     @Param('shortUrl') shortUrl: string,
     @Query('ps') password?: string,
   ) {

@@ -267,15 +267,12 @@ describe('UrlService', () => {
     });
 
     it('should throw a NotFoundException when the URL does not exist', async () => {
-      // Mock the inputs
       const urlId = 1;
       const userId = 1;
 
-      jest.spyOn(service, 'findOneUrl').mockResolvedValue(null) as jest.Mock;
-
       jest
-        .spyOn(prismaService.url, 'delete')
-        .mockRejectedValueOnce(new NotFoundException('URL not found'));
+        .spyOn(service, 'findOneUrl')
+        .mockRejectedValue(new NotFoundException('URL not found'));
 
       await expect(
         service.deleteShortenedUrl(urlId, userId),
