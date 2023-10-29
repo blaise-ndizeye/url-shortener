@@ -141,4 +141,37 @@ describe('UrlController', () => {
       ).rejects.toThrowError(BadRequestException);
     });
   });
+
+  describe('deleteShortenedUrl', () => {
+    it('should throw NotFoundException when url is not found', async () => {
+      jest
+        .spyOn(service, 'findOneUrl')
+        .mockRejectedValue(new NotFoundException());
+
+      await expect(
+        controller.deleteShortenedUrl({ id: 1 }, 1),
+      ).rejects.toThrowError(NotFoundException);
+    });
+
+    it('should delete shortened url', async () => {
+      jest.spyOn(service, 'findOneUrl').mockResolvedValue({
+        id: 1,
+        original_url: 'https://google.com',
+        short_url: 'https://short.com',
+        number_of_clicks: 0,
+        expires_at: new Date(2024, 1, 1),
+        is_password_protected: true,
+        password: expect.any(String),
+        user_id: 1,
+        updated_at: expect.any(Date),
+        created_at: expect.any(Date),
+      });
+
+      jest.spyOn(service, 'deleteShortenedUrl').mockResolvedValue(undefined);
+
+      await expect(
+        controller.deleteShortenedUrl({ id: 1 }, 1),
+      ).resolves.toBeUndefined();
+    });
+  });
 });
