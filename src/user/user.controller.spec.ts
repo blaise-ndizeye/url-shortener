@@ -1,7 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
@@ -16,7 +21,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 describe('UserController', () => {
   let controller: UserController;
   let service: UserService;
-  let prismaService: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -26,7 +30,6 @@ describe('UserController', () => {
 
     controller = module.get<UserController>(UserController);
     service = module.get<UserService>(UserService);
-    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
@@ -183,6 +186,43 @@ describe('UserController', () => {
       await expect(
         controller.updateUser({ id: 1 }, updateUserDto),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('should deletea user with provided id', async () => {
+      const userId = 1;
+
+      jest.spyOn(service, 'deleteUser').mockResolvedValue(undefined);
+
+      await expect(controller.deleteUser(userId, { id: 1 })).resolves.toEqual(
+        undefined,
+      );
+    });
+
+    it('should throw ForbiddenExpection when user to delete is the same with operating admin', async () => {
+      const userId = 1;
+
+      jest.spyOn(service, 'findUserById').mockResolvedValue({
+        id: userId,
+        username: 'testuser',
+        role: UserRole.USER,
+        password: expect.any(String),
+      });
+
+      await expect(controller.deleteUser(userId, { id: 1 })).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it("should throw NotFoundException when user to delete don't exist", async () => {
+      const userId = 1;
+
+      jest.spyOn(service, 'findUserById').mockResolvedValue(null);
+
+      await expect(controller.deleteUser(userId, { id: 1 })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

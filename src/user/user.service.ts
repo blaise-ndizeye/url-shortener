@@ -108,11 +108,7 @@ export class UserService {
   }
 
   async deleteUser(userId: number, adminId: number) {
-    const userToDelete = await this.prismaService.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
+    const userToDelete = await this.findUserById(userId);
 
     if (!userToDelete) {
       throw new NotFoundException();
