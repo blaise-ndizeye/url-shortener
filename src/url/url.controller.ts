@@ -16,9 +16,9 @@ import {
   UpdateShortenedUrlDto,
   UrlFiltersDto,
 } from './dtos/url.dto';
-import { User } from 'src/user/decorators/user.decorator';
-import { TokenPayload } from 'src/user/dtos/user.dto';
-import { Roles } from 'src/user/decorators/role.decorator';
+import { User } from '../user/decorators/user.decorator';
+import { TokenPayload } from '../user/dtos/user.dto';
+import { Roles } from '../user/decorators/role.decorator';
 
 @Controller('url')
 @Roles(UserRole.ADMIN, UserRole.USER)
