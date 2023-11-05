@@ -17,11 +17,11 @@ export class CreateShortenedUrlDto {
 
   @IsOptional()
   @IsDate()
-  expirationDate: Date;
+  expirationDate?: Date;
 
   @IsOptional()
   @IsString()
-  password: string;
+  password?: string;
 }
 
 export class UpdateShortenedUrlDto extends CreateShortenedUrlDto {
